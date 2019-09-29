@@ -1,0 +1,66 @@
+# 
+version: 2
+jobs:
+  build:
+    machine:
+      enabled: true
+    working_directory: /home/circleci/.go_workspace/src/github.com/tmc/terratest-bazel
+    steps:
+      - checkout
+      - run: |
+          # Replace go with go 1.13
+          go get golang.org/dl/go1.13.1
+          go1.13.1 download
+          sudo mv `which go1.13.1` `which go`
+      - run: sudo apt-get install build-essential
+      - run: sudo cp .circleci/bazel.rc /etc/bazel.bazelrc
+      - run: go get github.com/bazelbuild/bazelisk
+      - run: go get sigs.k8s.io/kind@v0.5.1
+      - run: kind create cluster --wait=30s
+      - restore_cache:
+          keys:
+            - "v3-bazel_cache"
+            - "v2-bazel_cache"
+      - run: bazelisk query //... --noshow_progress
+      - run:
+          command: bazelisk build //... --noshow_progress
+          no_output_timeout: 20m
+      - run: |
+          curl -LO https://storage.googleapis.com/kubernetes-release/release/v1.16.0/bin/linux/amd64/kubectl
+          chmod +x kubectl
+          sudo mv kubectl /usr/local/bin
+      - run:
+          command: |
+            export KUBECONFIG="$(kind get kubeconfig-path --name="kind")"
+            bazelisk test //... --test_output=all --noshow_progress
+          no_output_timeout: 20m
+      - save_cache:
+          key: "v3-bazel_cache"
+          paths:
+            - "/home/circleci/.cache"
+      - run:
+          command: kind export logs /tmp/kindlogs
+          when: always
+      - store_artifacts:
+          path: /tmp/kindlogs
+      - store_artifacts:
+          path: bazel-testlogs
+      # TODO: this needs to be repeated for every subdirecotry or another approach needs to be taken.
+      - store_test_results:
+          path: bazel-testlogs/example-test
+
+workflows:
+  version: 2
+  commit:
+    jobs:
+      - build
+  nightly:
+    triggers:
+      - schedule:
+          cron: "0 0 * * *"
+          filters:
+            branches:
+              only:
+                - master
+    jobs:
+      - build

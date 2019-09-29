@@ -16,9 +16,7 @@ import (
 )
 
 func run(args ...string) {
-	a0 := args[0]
-	al := args[1:]
-	cmd := exec.Command(a0, al...)
+	cmd := exec.Command(args[0], args[1:]...)
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
 	err := cmd.Run()
@@ -35,11 +33,10 @@ func kubeconfigPath() string {
 	return ""
 }
 
-func TestFoobar(t *testing.T) {
-	run("env")
-	run("tree")
-	run("kubectl", "config", "get-contexts")
-
+func TestPodBasics(t *testing.T) {
+	t.Parallel()
+	// run("env")
+	// run("kubectl", "config", "get-contexts")
 	options := k8s.NewKubectlOptions("", kubeconfigPath())
 	kubeResourcePath, err := filepath.Abs("./testdata/nginx-deployment.yaml")
 	if err != nil {

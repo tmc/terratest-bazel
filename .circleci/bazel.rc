@@ -1,0 +1,3 @@
+build --experimental_strict_action_env
+build --local_resources=14336,8.0,1.0
+
