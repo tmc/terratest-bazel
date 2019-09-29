@@ -1,0 +1,13 @@
+load("@io_bazel_rules_go//go:def.bzl", "go_test")
+
+go_test(
+    name = "go_default_test",
+    srcs = ["example_test.go"],
+    data = glob(["testdata/**"]) + ["@kubeconfig//:kubeconfig.yaml"],
+    deps = [
+        "@com_github_gruntwork_io_terratest//modules/k8s:go_default_library",
+        "@com_github_gruntwork_io_terratest//modules/random:go_default_library",
+        "@com_github_gruntwork_io_terratest//modules/shell:go_default_library",
+        "@com_github_stretchr_testify//require:go_default_library",
+    ],
+)
