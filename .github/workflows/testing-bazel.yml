@@ -1,4 +1,4 @@
-name: ci
+name: ci-bazel
 
 on: [push]
 
@@ -20,5 +20,11 @@ jobs:
       with:
         fetch-depth: 1
         path: src/github.com/${{ github.repository }}
+    - run: env
     - uses: engineerd/setup-kind@v0.3.0
-    - run: go test -v ./...
+    - run: sudo cp .circleci/bazel.rc /etc/bazel.bazelrc
+    - run: go get github.com/bazelbuild/bazelisk
+    - run: ~/go/bin/bazelisk query //... --noshow_progress
+    - run: ~/go/bin/bazelisk build //... --noshow_progress
+    - run: |
+          ~/go/bin/bazelisk test //... --test_output=all --noshow_progress
