@@ -26,7 +26,7 @@ func run(args ...string) {
 }
 
 func kubeconfigPath() string {
-	// if TEST_SRCDIR is set we are running under bazel and are sandboxed.
+	// If TEST_SRCDIR is set we are running under bazel and are sandboxed.
 	if tsd := os.Getenv("TEST_SRCDIR"); tsd != "" {
 		return tsd + "/kubeconfig/kubeconfig.yaml"
 	}
