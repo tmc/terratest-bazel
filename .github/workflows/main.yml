@@ -20,5 +20,11 @@ jobs:
       with:
         fetch-depth: 1
         path: src/github.com/${{ github.repository }}
+    - uses: actions/cache@v1
+      with:
+        path: ~/go/pkg/mod
+        key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}
+        restore-keys: |
+          ${{ runner.os }}-go-
     - uses: engineerd/setup-kind@v0.3.0
     - run: go test -v ./...
