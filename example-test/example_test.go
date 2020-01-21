@@ -37,13 +37,13 @@ func TestPodBasics(t *testing.T) {
 	t.Parallel()
 	// run("env")
 	// run("kubectl", "config", "get-contexts")
-	options := k8s.NewKubectlOptions("", kubeconfigPath())
+	namespaceName := fmt.Sprintf("kubernetes-basic-example-%s", strings.ToLower(random.UniqueId()))
+	options := k8s.NewKubectlOptions("", kubeconfigPath(), namespaceName)
 	kubeResourcePath, err := filepath.Abs("./testdata/nginx-deployment.yaml")
 	if err != nil {
 		t.Error(err)
 	}
 
-	namespaceName := fmt.Sprintf("kubernetes-basic-example-%s", strings.ToLower(random.UniqueId()))
 	k8s.CreateNamespace(t, options, namespaceName)
 	options.Namespace = namespaceName
 	// ... and make sure to delete the namespace at the end of the test
