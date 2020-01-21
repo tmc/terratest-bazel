@@ -6,23 +6,25 @@ jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v1
+    - name: setup go
+      uses: actions/setup-go@v1
+      with:
+        go-version: 1.x
+    - name: setup env
+      run: |
+        echo "::set-env name=GOPATH::$(go env GOPATH)"
+        echo "::add-path::$(go env GOPATH)/bin"
+      shell: bash
+    - name: checkout
+      uses: actions/checkout@v1
+      with:
+        fetch-depth: 1
+        path: src/github.com/${{ github.repository }}
     - run: env
-    - run: sudo apt-get install -y build-essential
-    - run: sudo snap install --classic --channel=1.13/stable go
+    - uses: engineerd/setup-kind@v0.3.0
     - run: sudo cp .circleci/bazel.rc /etc/bazel.bazelrc
     - run: go get github.com/bazelbuild/bazelisk
-    - run: go get sigs.k8s.io/kind@v0.5.1
-    - run: ~/go/bin/kind create cluster --wait=120s
-    - run: |
-        curl -LO https://storage.googleapis.com/kubernetes-release/release/v1.16.0/bin/linux/amd64/kubectl
-        chmod +x kubectl
-        sudo mv kubectl /usr/local/bin
-    - run: |
-          export KUBECONFIG="$(~/go/bin/kind get kubeconfig-path --name="kind")"
-          kubectl cluster-info
     - run: ~/go/bin/bazelisk query //... --noshow_progress
     - run: ~/go/bin/bazelisk build //... --noshow_progress
     - run: |
-          export KUBECONFIG="$(~/go/bin/kind get kubeconfig-path --name="kind")"
           ~/go/bin/bazelisk test //... --test_output=all --noshow_progress
